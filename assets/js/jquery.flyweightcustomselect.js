@@ -127,8 +127,8 @@
 				menuDiv.append(touchScrollIndicator);
 			};
 
-			//update selecEl value to new index			
-			var setSelectToIndex = function(lookupIndex) {
+			//update selecEl value to new index         
+			var setSelectToIndex = function(lookupIndex, fireChange) {
 				selectEl.value = lookupHash[lookupIndex].value;
 				selectEl.selectedIndex = lookupHash[lookupIndex].selectIndex;
 				
@@ -136,7 +136,7 @@
 				placeHolder.find("span." + settings.classes.placeholder.text.base).html(lookupHash[lookupIndex].text);
 				
 				//trigger any change events bound to select element
-				$(selectEl).trigger("change");
+				if (fireChange) $(selectEl).trigger("change");
 			};
 
 			//update menu to show new select info
@@ -145,7 +145,7 @@
 				
 				//first ensure select is kept in sync
 				//necessary for data integrity
-				setSelectToIndex(lookupIndex);
+				setSelectToIndex(lookupIndex, false);
 				
 				//scroll to selected LI in list
 				$selectedAnchor = menuDiv.find('a[data-index="' + lookupHash[lookupIndex].selectIndex + '"]');
@@ -205,7 +205,7 @@
 				}
 				
 				if (!menu.touchMoved) {
-					setSelectToIndex(getLookupIndexByAttr("selectIndex", parseInt(selectedAnchor.getAttribute("data-index"), 10)));
+					setSelectToIndex(getLookupIndexByAttr("selectIndex", parseInt(selectedAnchor.getAttribute("data-index"), 10)), true);
 					menu.close();
 					//return focus to placeholder
 					placeHolder.focus();
@@ -268,8 +268,9 @@
 						//set closure wide variable to remember which object triggered open
 						placeHolder = triggeredPlaceHolder;
 						selectEl = triggeredSelectEl;
+						mapOptionsToHash();
 					},
-					open: function() {					
+					open: function() {                  
 						if (!isOpen) {
 							//cache the values & text for performance
 							mapOptionsToHash();
@@ -324,16 +325,16 @@
 						return isOpen;
 					},
 					scrollDown: function() {
-						this.open() || scrollBy(1);	
+						this.open() || scrollBy(1); 
 					},
 					scrollUp: function() {
 						this.open() || scrollBy(-1);
 					},
 					pageDown: function() {
-						this.open() || scrollBy(10);	
+						this.open() || scrollBy(10);    
 					},
 					pageUp: function() {
-						this.open() || scrollBy(-10);	
+						this.open() || scrollBy(-10);   
 					},
 					search: function(character) {
 						this.open();
@@ -345,6 +346,7 @@
 					getCurrentPlaceHolder: function() {
 						return placeHolder;
 					},
+					setSelectToIndex: setSelectToIndex,
 					touchMoved: false,
 					lastTouch: 0
 				};
@@ -515,6 +517,10 @@
 						placeHolder.unbind();
 						placeHolder.remove();
 						$(selectEl).removeAttr("disabled").show();
+					},
+					setSelectedIndex: function (idx) {
+						menu.bondToSelect(placeHolder, selectEl);
+						menu.setSelectToIndex(idx);
 					}
 				};
 			}();
@@ -576,12 +582,17 @@
 			},
 			enable:function() {
 				return this.each(function() {
-					$(this).data('placeHolder').enable();	
+					$(this).data('placeHolder').enable();   
 				});
 			},
 			disable:function() {
 				return this.each(function() {
-					$(this).data('placeHolder').disable();	
+					$(this).data('placeHolder').disable();  
+				});
+			},
+			setSelectedIndex: function (idx) {
+				return this.each(function () {
+					$(this).data('placeHolder').setSelectedIndex(idx);
 				});
 			}
 		};
@@ -649,7 +660,7 @@
 				scroll:{
 					base:"fwselect-menu-scroll"
 				}
-			}			
+			}           
 		},
 		optionfilter:'option,optgroup',
 		tabindex:false,
